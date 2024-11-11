@@ -1,35 +1,59 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+
+import { useState, useEffect } from 'react';
+
+// Services
+import * as petService from './services/petsService'
+
+// Components
+import PetList from './components/PetList';
+import PetDetails from './components/PetDetail';
+import PetForm from './components/PetForm';
+
+export default function App() {
+  const [ pets, setPets ] = useState([])
+  const [ selected, setSelected ] = useState(null);
+  const [ isFormOpen, setIsFormOpen ] = useState(false)
+
+  // we want to load the api data when the component mounts
+  useEffect(()=> {
+    async function getPets(){
+      try {
+        const allPets = await petService.index();
+        if(allPets.error){
+          throw new Error(pets.error)
+        }
+        setPets(allPets)
+      } catch (error) {
+        console.log(error)
+      }
+
+    }
+
+    getPets()
+  }, [])
+
+  const updateSelected = (pet) => {
+    setSelected(pet)
+  }
+
+  const handleFormView = () => { setIsFormOpen(!isFormOpen) }
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <PetList
+        petList={pets}
+        updateSelected={updateSelected}
+        handleFormView={handleFormView}
+        isFormOpen={isFormOpen}
+      />
+      {
+        isFormOpen ?
+          <PetForm/>
+        :
+          <PetDetails selected={selected}/>
+      }
     </>
   )
 }
-
-export default App
